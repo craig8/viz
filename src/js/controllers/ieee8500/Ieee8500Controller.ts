@@ -26,26 +26,28 @@ class Ieee8500Controller {
         return this._dataSource;
     }
 
-    constructor(dataSource:DataSource) {  
+    constructor(dataSource:DataSource) {
 
         this._dataSource = dataSource;
 
-        if (dataSource == DataSource.RabinalWebsocket) { 
+        if (dataSource == DataSource.RabinalWebsocket) {
             this.connectWebsocket();
-        } 
+        }
     }
 
     connectWebsocket() {
 
         let self = this;
 		//default gossServerUrl is ws://127.0.0.1:61614
-		var gossServerUrl='ws://gridappsd:61614';
+    // For docker use the localhost computer which should expose
+    // the port properly.
+		var gossServerUrl='ws://127.0.0.1:61614';
         this._stompClient = Stomp.client(gossServerUrl, null);
         this._stompClient.heartbeat.outgoing = 0;
         this._stompClient.heartbeat.incoming = 0;
         this._stompClient.connect(
             'system',
-            'manager', 
+            'manager',
             this.onWebsocketConnected.bind(this),
             this.onWebsocketDisconnected.bind(this));
     }
@@ -55,7 +57,7 @@ class Ieee8500Controller {
         this._websocketConnected = true;
 
         let self = this;
-        this._stompClient.subscribe(this._responseQueueTopic, 
+        this._stompClient.subscribe(this._responseQueueTopic,
             (responseQueueMessage:any) => {
                 let simulationId = JSON.parse(responseQueueMessage.body);
                 console.log('Received simulation id: ' + simulationId);
@@ -72,7 +74,7 @@ class Ieee8500Controller {
 
     sendControlMessage() {
 
-        this._stompClient.send(this._simulationControlTopic, 
+        this._stompClient.send(this._simulationControlTopic,
             {"reply-to" :"/temp-queue/response-queue"},
             JSON.stringify(this._simulationRequest));
     }
@@ -84,7 +86,7 @@ class Ieee8500Controller {
     }
 
     onFncsOutputReceived(message:any) {
-        
+
         console.log('Fncs output: ');
 
         let data = JSON.parse(message.body);
